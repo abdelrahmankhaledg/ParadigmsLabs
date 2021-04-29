@@ -1,45 +1,106 @@
-
-PARSER_BEGIN(Hello)
+PARSER_BEGIN(Language)
  import java.io.StringReader;
-import java.util.HashMap;
- public class Hello {
+import java.util.*;
+ public class Language {
 	static public final HashMap<String,Integer >hashmap = new HashMap();
     public static void main(String[] args) throws Exception {
-      Hello hello=new Hello(System.in);
-      Hello.starts();
+      Language hello=new Language(System.in);
+      Language.START();
     }
     
 }
-
-PARSER_END(Hello)
+PARSER_END(Language)
 
 
 SKIP: { " " |"\t" |"\n" |"\r" }
 
-TOKEN : { <#Letter: (["a"-"z"]) > }
+TOKEN : { <#Letter: (["a"-"f"]) > }
 TOKEN : { <#Digit: (["0"-"9"]) > }
-TOKEN : { <NUM: (<Digit>)+> }
-TOKEN : { <Var: (<Letter>)+> }
+TOKEN : {<TRUE: "tt">}
+TOKEN : {<FALSE: "ff" >}
+TOKEN : { < NUM : (<Digit>)+> }
+TOKEN : { < Var : (<Letter>)+> }
 TOKEN : { <PLUS: "+" > }
 TOKEN : { <MINUS: "-" >}
 TOKEN : { <EQUAL:"==" >}
 TOKEN : {<LEFTBRACE: "(" >}
 TOKEN : {<RIGHTBRACE:")" >}
-TOKEN : {<TRUE: "tt">}
-TOKEN : {<FALSE: "ff" >}
 TOKEN : {<NEGATION:"!" >}
 TOKEN : {<AND:"^" >}
-void starts():
+TOKEN : {< DONOTHING : "skip" >}
+TOKEN : { <ColEQUAL: ":=">}
+TOKEN : { < SEMICOLON:";" > }
+TOKEN : { < IF : "if" > }
+TOKEN : {< THEN : "then" > }
+TOKEN : {< ELSE : "else" > }
+TOKEN : {< WHILE  : "while" >}
+TOKEN : { < DO  :"do" >}
+void START():
 {
- int result;
+}
+{ 
+Com(true) (< SEMICOLON > Com(true))*
+
+< EOF >
+
+{
+	for (Map.Entry mapElement : hashmap.entrySet()) {
+            String key = (String)mapElement.getKey();
+            int value = ((int)mapElement.getValue());
+            System.out.println(key + " : " + value);
+        }
+}
+}
+
+void Com(boolean then):
+{
+  
+  Token vName;//Stores the name of the variable
+  int vValue;//Stores the value of the variable
+  boolean x;//Stores the value of the boolean expression
+  boolean y;//Variable sent to comnand
+
 }
 {
-  result=AExp()
- 	{
- 	  System.out.println(result);
- 	} 
- 	  
-   <EOF>
+ < DONOTHING >
+ {
+   if(then ==true) { 
+	System.out.println("Ending the program");
+	System.exit(0);
+}
+ }
+|
+LOOKAHEAD(3)
+vName=< Var> <ColEQUAL> vValue=AExp()
+{
+  if(then==true)
+	hashmap.put(vName.image,vValue);
+
+}
+|
+
+  < IF > x=BExp() < THEN >
+  
+  Com(then && x) < ELSE > Com(then && !x)
+  
+
+|
+< WHILE > {
+Token t;
+String expression="";
+do {
+t=getToken(1);
+expression+=t.image;
+}
+while(!getNextToken().image.equals("do"));
+System.out.println(expression);
+
+ }
+
+
+ x=BExp()  < DO > Com(true)
+
+
 }
 int AExp():
 {
@@ -51,6 +112,21 @@ Token t;
 int value;
 }
 {
+	
+	  t=<NUM>
+	  { return Integer.parseInt(t.image);}
+	|
+	t=<Var>
+	  {temp=t.image; }
+	  {if(hashmap.containsKey(temp)) {
+			return hashmap.get(temp);
+
+	    }else {
+			System.out.println(temp + " Wasn't initialized");
+			System.out.println("Exiting the program");
+			System.exit(1);
+	      } }
+| 
 	(
 	  (
 	    <LEFTBRACE>
@@ -70,28 +146,24 @@ int value;
 	  {if(add) {
 	    return num1+num2;
 	    }else {
+	      int sub=num1-num2;
+	      if(sub<0) {
+			System.out.println("Negative Numbers aren't allowed");
+			System.out.println("Exiting the program");
+			System.exit(1);
+	      }else { 
 			return num1-num2;
 	      }
 
 	    }
+	  }
 	  
 	)
-	|
-	(
-	  t=<NUM>
-	  { return Integer.parseInt(t.image);}
-	)
-	|
-	(
-	  t=<Var>
-	  {temp=t.image; }
-	  {if(hashmap.containsKey(temp)) {
-			return hashmap.get(temp);
-
-	    }else {
-			return -1;
-	      } }
-	)  
+	
+	
+	
+	
+	  
 	
   }
 
@@ -101,18 +173,18 @@ boolean result2;
 int a1,a2;
 }
 {
+  (
+	  <TRUE>
+	  {return true; }
+  )
+	|
 	(
-	  <LEFTBRACE>
-	  (
-	  (
-	  result1= BExp()
-	  <AND>
-	  result2= BExp()
-	  <RIGHTBRACE>
-	  )
-	  { return result1&&result2;}
-		|
-		(
+	  <FALSE>
+	  {return false; }
+	)
+| 
+		LOOKAHEAD(3)
+		< LEFTBRACE >
 		a1 = AExp()
 		  <EQUAL>
 		a2 = AExp()
@@ -123,29 +195,25 @@ int a1,a2;
 		    }else {
 		      return false;
 		     }
-		} 
-		) 
-	  )
-	  
-	)
-	|
-	(
-	  <FALSE>
-	  {return false; }
-	)
-	
-	|
-	(
-	  <NEGATION>
+		}
+| 
+<NEGATION>
 	 result1= BExp()
 	
 	 {
 	   return !result1;
 	 }
-	)
-	|
-	(
-	  <TRUE>
-	  {return true; }
-	 )
+
+| 
+	  
+	  < LEFTBRACE >
+	  result1= BExp()
+	  <AND>
+	  result2= BExp()
+	  <RIGHTBRACE>
+	  { return result1&&result2;}
+		
+	  
+	
+	
   }
