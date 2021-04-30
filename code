@@ -1,0 +1,374 @@
+options {
+STATIC =false;
+}
+PARSER_BEGIN(Language)
+ import java.io.StringReader;
+import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+ public class Language {
+	static public final HashMap<String,Integer >hashmap = new HashMap();
+	static int n=0;
+	 static String matchedString="";
+    public static void main(String[] args) throws Exception {
+       Language hello=new Language(System.in);
+      hello.START();
+    }
+    
+}
+PARSER_END(Language)
+
+
+SKIP: { " " |"\t" |"\n" |"\r" }
+
+TOKEN : { <#Letter: (["a"-"f"]) > }
+TOKEN : { <#Digit: (["0"-"9"]) > }
+TOKEN : {<TRUE: "tt">}
+TOKEN : {<FALSE: "ff" >}
+TOKEN : { < NUM : (<Digit>)+> }
+TOKEN : { < Var : (<Letter>)+> }
+TOKEN : { <PLUS: "+" > }
+TOKEN : { <MINUS: "-" >}
+TOKEN : { <EQUAL:"==" >}
+TOKEN : {<LEFTBRACE: "(" >}
+TOKEN : {<RIGHTBRACE:")" >}
+TOKEN : {<NEGATION:"!" >}
+TOKEN : {<AND:"^" >}
+TOKEN : {< DONOTHING : "skip" >}
+TOKEN : { <ColEQUAL: ":=">}
+TOKEN : { < SEMICOLON:";" > }
+TOKEN : { < IF : "if" > }
+TOKEN : {< THEN : "then" > }
+TOKEN : {< ELSE : "else" > }
+TOKEN : {< WHILE  : "while" >}
+TOKEN : { < DO  :"do" >}
+void START():
+{
+}
+{ 
+Command(true) 
+
+< EOF >
+
+{
+	for (Map.Entry mapElement : hashmap.entrySet()) {
+            String key = (String)mapElement.getKey();
+            int value = ((int)mapElement.getValue());
+            System.out.println(key + " : " + value);
+        }
+}
+}
+void Command(boolean then):
+{
+}
+
+{
+Com(then) (< SEMICOLON >
+
+{
+  matchedString+=getToken(0).image;
+}
+
+ Com(then))*
+}
+
+void Com(boolean then):
+{
+  
+  Token vName;//Stores the name of the variable
+  int vValue;//Stores the value of the variable
+  boolean x;//Stores the value of the boolean expression
+  boolean y;//Variable sent to comnand
+}
+{
+
+< DONOTHING >
+{
+  matchedString+=getToken(0).image;
+}
+ 
+|
+LOOKAHEAD(3)//Lookahead between var and if
+vName=< Var>
+
+{
+  matchedString+=getToken(0).image;
+}
+
+ <ColEQUAL >
+
+{
+  matchedString+=getToken(0).image;
+}
+
+ vValue=AExp()
+{
+  if(then==true)
+	hashmap.put(vName.image,vValue);
+}
+|
+  < IF >
+{
+  matchedString+=getToken(0).image;
+}
+   x=BExp()
+
+   < THEN >
+   {
+  matchedString+=getToken(0).image;
+   }
+  
+  Command(then && x)
+
+  < ELSE >
+{
+  matchedString+=getToken(0).image;
+}
+
+   Command(then && !x) 
+  
+
+|
+< WHILE >
+{
+  matchedString+=getToken(0).image;
+}
+
+ x=BExp()
+
+
+  < DO >
+ {
+  matchedString+=getToken(0).image;
+}
+
+{
+if (then==true) {
+  String execute=matchedString.substring(matchedString.lastIndexOf("while"),matchedString.length());//execute now have the whole command starting from while which will be parsed again
+	 InputStream is = new ByteArrayInputStream( execute.getBytes() );
+	 Language parser=new Language(is);
+  if(x==true) {
+    n=1;  
+	Command(true);//parse the input and execute the command
+	 execute=matchedString.substring(matchedString.lastIndexOf("while"),matchedString.length());//execute now have the whole command starting from while which will be parsed again
+	  is = new ByteArrayInputStream( execute.getBytes() );
+	  parser=new Language(is);
+	parser.Command(true);
+}
+else {
+  if(n ==0) {
+	Command(false);
+}
+}
+}
+}
+
+}
+int AExp():
+{
+String temp=""; 
+int  num1;
+boolean add=true;
+int num2;
+Token t;
+int value;
+}
+{
+	
+	  t=<NUM>
+
+	  
+	  { matchedString+=getToken(0).image;
+	  }
+
+	  
+	  { return Integer.parseInt(t.image);}
+	|
+	t=<Var>
+
+	{ matchedString+=getToken(0).image;
+	  }
+	  
+	  {temp=t.image; }
+	  {if(hashmap.containsKey(temp)) {
+			return hashmap.get(temp);
+
+	    }else {
+			System.out.println(temp + " Wasn't initialized");
+			System.out.println("Exiting the program");
+			System.exit(1);
+	      } }
+| 
+	(
+	  (
+	    <LEFTBRACE>
+
+
+	   { matchedString+=getToken(0).image;
+	  }
+	  
+	  num1= AExp()
+	  (  
+	  <PLUS>
+
+	  { matchedString+=getToken(0).image;
+	   }
+	  
+	  |
+	  (
+	    
+	  <MINUS>
+
+	  { matchedString+=getToken(0).image;
+	  }
+
+	  
+	  {add=false; }
+	  )
+	  )
+	 num2 = AExp()
+	  <RIGHTBRACE>
+
+	  { matchedString+=getToken(0).image;
+	  }
+
+	  
+	  )
+	  {if(add) {
+	    
+	    return num1+num2;
+	    }else {
+	      int sub=num1-num2;
+	      	  
+	      if(sub<0) {
+			System.out.println("Negative Numbers aren't allowed");
+			System.out.println("Exiting the program");
+			System.exit(1);
+	      }else { 
+			return num1-num2;
+	      }
+
+	    }
+	  }
+	  
+	)
+	
+	
+	
+	
+	  
+	
+  }
+
+boolean BExp():
+{boolean result1;
+boolean result2;
+boolean t;
+int a1,a2;
+}
+{
+  (
+    
+	  <TRUE>
+
+
+	  { matchedString+=getToken(0).image;
+	 }
+
+	  
+	  {return true; }
+  )
+	|
+	(
+	  <FALSE>
+
+	  
+	  { matchedString+=getToken(0).image;
+	   }
+
+	  
+	  {return false; }
+	)
+| 
+
+< LEFTBRACE >
+		
+		{ matchedString+=getToken(0).image;
+	   }
+	    (
+	      LOOKAHEAD(BExp())
+	      t=leftBBExp()
+	    |
+	      t=leftBAExp()
+	    )
+	    {return t; }
+| 
+<NEGATION>
+
+{ matchedString+=getToken(0).image;
+	   }
+	  
+	 result1= BExp()
+	
+	 {
+	   return !result1;
+	 }
+
+		
+	  
+	
+	
+  }
+boolean leftBBExp():
+
+{
+  boolean result1;
+  boolean result2;
+}
+{
+
+
+  result1= BExp()
+  
+	  
+
+	  <AND>
+	  { matchedString+=getToken(0).image;
+	   }
+	   
+	  result2= BExp()
+	  
+	  <RIGHTBRACE>
+	  { matchedString+=getToken(0).image;
+	   }
+	  { return result1&&result2;}
+
+
+}
+
+boolean leftBAExp ():
+{
+int a1;
+int a2;
+  }
+{
+			a1 = AExp()
+		  <EQUAL>
+
+		  { matchedString+=getToken(0).image;
+	  		}
+	  
+		a2 = AExp()
+		<RIGHTBRACE>
+
+		{ matchedString+=getToken(0).image;
+	   }
+	  
+		{
+		  if(a1==a2) {
+		    return true;
+		    }else { 
+		      return false;
+		     }
+		}
+  }
