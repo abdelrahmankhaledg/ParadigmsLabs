@@ -155,16 +155,12 @@ if (then==true) {
 	  parser=new Language(is);
 	parser.Command(true);
 }
-else {
-  if(n ==0) {
-	Command(false);
+
 }
+if(n==0) {
+Command(false);
 }
-}
-else {
-  if(n==0)
-	Command(false);
-}
+
 }
 }
 int AExp():
