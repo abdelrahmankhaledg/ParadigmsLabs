@@ -1,0 +1,123 @@
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.BufferedReader;
+import java.io.Reader;
+import java.io.StringReader;
+
+import org.junit.jupiter.api.Test;
+
+class tests {
+	StringReader input = new StringReader(" a := 3");
+	Reader reader = new BufferedReader(input);
+	Language lang= new Language(reader);
+	@Test
+	void test() {
+		
+		assertDoesNotThrow(()-> lang.START());
+	}
+	@Test
+	void test2() {
+		input = new StringReader("if tt then a:=4 else b := 3");
+		reader =new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test
+	void test3() {
+		input = new StringReader("a := 3 ; a := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test
+	void test4() {
+		input = new StringReader("if( 123 == 123 ) then while(123==124) do b := 9 else c := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	
+	@Test
+	void test5() {
+		input = new StringReader("while !(123 == 124) do e := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertThrows(StackOverflowError.class,()-> lang.START() );
+	}
+	@Test
+	void test6() {
+		input = new StringReader("if((12-4)==(4+4)) then a:=5 else b := 9");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test
+	void test7() {
+		input = new StringReader("if( tt ^ ff ) then while(123==124) do b := 9 else c := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test
+	void test8() {
+		input = new StringReader("if tt then while !tt do b := 9 else c := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test
+	void test9() {
+		input = new StringReader("if( ((123+245)+123)==((123-12)+124) ) then while(123==124) do e := 9 else c := 5");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	@Test 
+	void test10() {
+		input = new StringReader("a := 6; b := 2 ; while !((a - b) ==0) do b := (b + 1); a := (a - 1)");
+		reader= new BufferedReader(input);
+		lang.ReInit(reader);
+		assertDoesNotThrow(()-> lang.START() );
+	}
+	
+@Test 
+void test11() {
+	input = new StringReader("a := 1; if (a == 1) then while !(a==0) do a := (a-1) else a := 5");
+	reader= new BufferedReader(input);
+	lang.ReInit(reader);
+	assertDoesNotThrow(()-> lang.START() );
+}
+@Test 
+void test12() {
+	input = new StringReader("fff := 5");
+	reader= new BufferedReader(input);
+	lang.ReInit(reader);
+	assertDoesNotThrow(()-> lang.START() );
+}
+
+@Test 
+void test13 () {
+	input =new StringReader("a := 0; b := 3; while((a==0) ^ !(b==1)) do b := (b -1)");
+	reader= new BufferedReader(input);
+	lang.ReInit(reader);
+	assertDoesNotThrow(()-> lang.START() );
+}
+@Test 
+void test14 () {
+	input =new StringReader("a := 1; while !(a == 0) do skip");
+	reader= new BufferedReader(input);
+	lang.ReInit(reader);
+	assertThrows(StackOverflowError.class,()-> lang.START() );
+}
+
+@Test
+void test15 () {
+	input =new StringReader("a:=3;b:=4; while !(a==4) do if !( (a==5) ^ (b==2)) then a := (a+1);b:= (b-1) else a:=(a-1) ");
+	reader= new BufferedReader(input);
+	lang.ReInit(reader);
+	assertDoesNotThrow(()-> lang.START() );
+}
+}
+
+	
+	
